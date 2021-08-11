@@ -73,6 +73,14 @@ def get_query_results(s3_event_object):
 
 def count_missing_exports(queries_json_record):
     results_list = queries_json_record.get("query_results")
-    query_results = filter(lambda d: d['query_details']['query_name'] == "Missing exported ids", results_list)
-    logger.info(f'Missing exported id result object {query_results}')
-    return query_results
+    # query_results = dict(filter(lambda d: d['query_details']['query_name'] == "Missing exported ids", results_list))
+    missing_exported_dict = [d for d in results_list if d['query_details']['query_name'] == "Missing exported totals"][
+        0]
+    logger.info(f'Missing exported id result object {missing_exported_dict}')
+    query_results = missing_exported_dict['query_results']
+    count = 0
+    for result in query_results:
+        if result.get('missing_exported_count', 0) != "null":
+            count += int(result.get('missing_exported_count', 0))
+
+    return count
