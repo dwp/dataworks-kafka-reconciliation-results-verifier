@@ -1,3 +1,5 @@
+import argparse
+import json
 import logging
 import os
 import socket
@@ -7,6 +9,14 @@ import boto3
 
 from src.results_verifier_lambda.utility import aws_helper
 
+ERROR_NOTIFICATION_TYPE = "Error"
+WARNING_NOTIFICATION_TYPE = "Warning"
+INFORMATION_NOTIFICATION_TYPE = "Information"
+
+CRITICAL_SEVERITY = "Critical"
+HIGH_SEVERITY = "High"
+
+args = None
 logger = None
 
 
@@ -18,7 +28,9 @@ def handler(event, context):
         context (Object): The context info from AWS
 
     """
+    global args
     global logger
+
     logger = setup_logging("INFO")
     logger.info(f'Cloudwatch Event": {event}')
     try:
@@ -26,6 +38,49 @@ def handler(event, context):
         handle_event(event)
     except Exception as err:
         logger.error(f'Exception occurred for invocation", "error_message": {err}')
+
+
+def get_parameters():
+    """Parse the supplied command line arguments.
+
+    Returns:
+        args: The parsed and validated command line arguments
+
+    """
+    parser = argparse.ArgumentParser(
+        description="Start up and shut down ASGs on demand"
+    )
+
+    # Parse command line inputs and set defaults
+    parser.add_argument("--aws-profile", default="default")
+    parser.add_argument("--aws-region", default="eu-west-2")
+    parser.add_argument("--sns-topic", help="SNS topic ARN")
+    parser.add_argument("--environment", help="Environment value", default="NOT_SET")
+    parser.add_argument("--application", help="Application", default="NOT_SET")
+    parser.add_argument("--log-level", help="Log level for lambda", default="INFO")
+
+    _args = parser.parse_args()
+
+    # Override arguments with environment variables where set
+    if "AWS_PROFILE" in os.environ:
+        _args.aws_profile = os.environ["AWS_PROFILE"]
+
+    if "AWS_REGION" in os.environ:
+        _args.aws_region = os.environ["AWS_REGION"]
+
+    if "SNS_TOPIC" in os.environ:
+        _args.sns_topic = os.environ["SNS_TOPIC"]
+
+    if "ENVIRONMENT" in os.environ:
+        _args.environment = os.environ["ENVIRONMENT"]
+
+    if "APPLICATION" in os.environ:
+        _args.application = os.environ["APPLICATION"]
+
+    if "LOG_LEVEL" in os.environ:
+        _args.log_level = os.environ["LOG_LEVEL"]
+
+    return _args
 
 
 # Initialise logging
@@ -62,6 +117,8 @@ def handle_event(event):
     for record in records:
         queries_json_record = get_query_results(record.get('s3'))
         missing_export_count = count_missing_exports(queries_json_record)
+        message_payload = generate_message_payload(missing_export_count)
+        send_sns_message(message_payload, args.sns_topic)
 
 
 def get_query_results(s3_event_object):
@@ -84,3 +141,72 @@ def count_missing_exports(queries_json_record):
             count += int(result.get('missing_exported_count', 0))
 
     return count
+
+
+def generate_message_payload(
+        exported_count
+):
+    """Generates a payload for a monitoring message.
+
+    Arguments:
+        exported_count (int): the count of the missing records
+
+    """
+    custom_elements = [
+        {"key": "Exported count", "value": str(exported_count)}
+    ]
+
+    title_text = f"Kafka reconciliation results"
+
+    if exported_count == 0:
+        severity = HIGH_SEVERITY
+        notification_type = INFORMATION_NOTIFICATION_TYPE
+    else:
+        severity = CRITICAL_SEVERITY
+        notification_type = ERROR_NOTIFICATION_TYPE
+
+    payload = {
+        "severity": severity,
+        "notification_type": notification_type,
+        "slack_username": "AWS Batch Job Notification",
+        "title_text": title_text,
+        "custom_elements": custom_elements,
+    }
+
+    dumped_payload = get_escaped_json_string(payload)
+    logger.info(
+        f'Generated monitoring SNS payload", "payload": {dumped_payload}'
+    )
+
+    return payload
+
+
+def get_escaped_json_string(json_string):
+    try:
+        escaped_string = json.dumps(json.dumps(json_string))
+    except:
+        escaped_string = json.dumps(json_string)
+
+    return escaped_string
+
+
+def send_sns_message(
+        payload,
+        sns_topic_arn
+):
+    """Publishes the message to sns.
+
+    Arguments:
+        payload (dict): the payload to post to SNS
+        sns_topic_arn (string): the arn for the SNS topic
+
+    """
+
+    json_message = json.dumps(payload)
+
+    dumped_payload = get_escaped_json_string(payload)
+    logger.info(
+        f'Publishing payload to SNS", "payload": {dumped_payload}, "sns_topic_arn": "{sns_topic_arn}"'
+    )
+
+    return aws_helper.publish_sns_message(sns_topic_arn, json_message)

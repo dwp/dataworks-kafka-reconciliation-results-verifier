@@ -4,6 +4,7 @@ import boto3
 from botocore.config import Config
 
 s3_client = None
+sns_client = None
 
 
 def get_client(service_name, region=None, read_timeout_seconds=120):
@@ -39,3 +40,10 @@ def get_s3_file(bucket, key):
     response = s3_client.get_object(Bucket=bucket, key=key)
     data = json.loads(response['Body'].read())
     return data
+
+
+def publish_sns_message(sns_topic_arn, json_message):
+    global sns_client
+    if sns_client is None:
+        sns_client = get_client(service_name='sns')
+    return sns_client.publish(TopicArn=sns_topic_arn, Message=json_message)
