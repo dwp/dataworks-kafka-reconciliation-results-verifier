@@ -16,19 +16,23 @@ class TestResultsVerifier(TestCase):
     def test_entry_point(self):
         self.setUp_s3()
         sqs_client = boto3.client("sqs", region_name="eu-west-2")
-        sqs_url = sqs_client.create_queue(QueueName='test')["QueueUrl"]
-        sqs_arn = sqs_client.get_queue_attributes(QueueUrl=sqs_url)["Attributes"]["QueueArn"]
+        sqs_url = sqs_client.create_queue(QueueName="test")["QueueUrl"]
+        sqs_arn = sqs_client.get_queue_attributes(QueueUrl=sqs_url)["Attributes"][
+            "QueueArn"
+        ]
         sns_topic_arn = self.setup_sns(sqs_arn)
 
         event = self.get_event()
         with mock.patch.dict(
-                os.environ, {"SNS_TOPIC": sns_topic_arn, "AWS_REGION": "eu-west-2"}
+            os.environ, {"SNS_TOPIC": sns_topic_arn, "AWS_REGION": "eu-west-2"}
         ):
             event_handler.handler(event, None)
-            messages = sqs_client.receive_message(QueueUrl=sqs_url, MaxNumberOfMessages=10)["Messages"]
+            messages = sqs_client.receive_message(
+                QueueUrl=sqs_url, MaxNumberOfMessages=10
+            )["Messages"]
             self.assertEqual(1, len(messages))
-            message_body = json.loads(messages[0]['Body'])
-            message = json.loads(message_body['Message'])
+            message_body = json.loads(messages[0]["Body"])
+            message = json.loads(message_body["Message"])
 
             expected_message = {
                 "severity": "Critical",
@@ -37,8 +41,8 @@ class TestResultsVerifier(TestCase):
                 "title_text": "Kafka reconciliation - missing records",
                 "custom_elements": [
                     {"key": "Exported count", "value": "5"},
-                    {"key": "Missing exports count", "value": "8"}
-                ]
+                    {"key": "Missing exports count", "value": "8"},
+                ],
             }
 
             self.assertEqual(message, expected_message)
@@ -164,7 +168,7 @@ class TestResultsVerifier(TestCase):
 
         topic_arn = topics_json["Topics"][0]["TopicArn"]
 
-        sns_client.subscribe(TopicArn=topic_arn, Protocol='sqs', Endpoint=sqs_arn)
+        sns_client.subscribe(TopicArn=topic_arn, Protocol="sqs", Endpoint=sqs_arn)
 
         return topic_arn
 

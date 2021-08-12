@@ -136,7 +136,7 @@ def get_counts(queries_json_record):
         d
         for d in results_list
         if d["query_details"]["query_name"]
-           in ["Missing exported totals", "Export totals"]
+        in ["Missing exported totals", "Export totals"]
     ]
     missing_export_count = count_missing_exports(filtered_list)
     export_count = count_total_exports(filtered_list)
