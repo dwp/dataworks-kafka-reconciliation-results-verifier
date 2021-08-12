@@ -118,7 +118,7 @@ def handle_event(event):
     records = event.get('Records', [])
     for record in records:
         queries_json_record = get_query_results(record.get('s3'))
-        missing_export_count = count_missing_exports(queries_json_record)
+        missing_export_count, export_count = get_counts(queries_json_record)
         message_payload = generate_message_payload(missing_export_count)
         send_sns_message(message_payload, args.sns_topic)
 
@@ -130,17 +130,40 @@ def get_query_results(s3_event_object):
     return results_file
 
 
-def count_missing_exports(queries_json_record):
+def get_counts(queries_json_record):
     results_list = queries_json_record.get("query_results")
-    # query_results = dict(filter(lambda d: d['query_details']['query_name'] == "Missing exported ids", results_list))
+    filtered_list = \
+        [
+            d for d in results_list if d['query_details']['query_name'] in ["Missing exported totals", "Export totals"]
+        ]
+    missing_export_count = count_missing_exports(filtered_list)
+    export_count = count_total_exports(filtered_list)
+    return missing_export_count, export_count
+
+
+def count_missing_exports(results_list):
     missing_exported_dict = [d for d in results_list if d['query_details']['query_name'] == "Missing exported totals"][
         0]
     logger.info(f'Missing exported id result object {missing_exported_dict}')
-    query_results = missing_exported_dict['query_results']
+    count = count_query_results(missing_exported_dict, "missing_exported_count")
+    logger.info(f'Missing exported count {count}')
+    return count
+
+
+def count_total_exports(results_list):
+    total_exported_dict = [d for d in results_list if d['query_details']['query_name'] == "Export totals"][0]
+    logger.info(f'Total exports result object {total_exported_dict}')
+    count = count_query_results(total_exported_dict, "exported_count")
+    logger.info(f'Exported count {count}')
+    return count
+
+
+def count_query_results(query_dict, result_name):
+    query_results = query_dict['query_results']
     count = 0
     for result in query_results:
-        if result.get('missing_exported_count', 0) != "null":
-            count += int(result.get('missing_exported_count', 0))
+        if result.get(result_name, 0) != "null":
+            count += int(result.get(result_name, 0))
 
     return count
 
@@ -170,7 +193,7 @@ def generate_message_payload(
     payload = {
         "severity": severity,
         "notification_type": notification_type,
-        "slack_username": "AWS Batch Job Notification",
+        "slack_username": "AWS Lambda Notification",
         "title_text": title_text,
         "custom_elements": custom_elements,
     }

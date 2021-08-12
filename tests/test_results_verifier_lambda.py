@@ -14,26 +14,31 @@ class TestResultsVerifier(unittest.TestCase):
         with open(results_json_path) as f:
             json_record = json.load(f)
 
-        count = event_handler.count_missing_exports(json_record)
-        self.assertEqual(count, 8)
+        missing_export_count, export_count = event_handler.get_counts(json_record)
+        self.assertEqual(missing_export_count, 8)
+        self.assertEqual(export_count, 5)
 
     def test_count_missing_exports_null(self):
         null_json_record = {
             "query_results": [
                 {
                     "query_details": {
-                        "enabled": 'true',
                         "query_name": "Missing exported totals",
-                        "query_type": "main",
-                        "query_description": "Shows stats on the total amount of data missing from export",
-                        "query_file": "missing_exported_totals.sql",
-                        "results_file": "missing_exported_totals.csv",
-                        "show_column_names": 'true',
-                        "order": 5
                     },
                     "query_results": [
                         {
                             "missing_exported_count": "null"
+                        }
+                    ]
+                },
+                {
+                    "query_details": {
+                        "query_name": "Export totals",
+                    },
+                    "query_results": [
+                        {
+
+                            "exported_count": "null"
                         }
                     ]
                 }
@@ -41,8 +46,9 @@ class TestResultsVerifier(unittest.TestCase):
             ]
         }
 
-        count = event_handler.count_missing_exports(null_json_record)
-        self.assertEqual(count, 0)
+        missing_export_count, export_count = event_handler.get_counts(null_json_record)
+        self.assertEqual(missing_export_count, 0)
+        self.assertEqual(export_count, 0)
 
     def setUp(self):
         event_handler.logger = logging.getLogger()

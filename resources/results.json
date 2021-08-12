@@ -172,7 +172,7 @@
             "query_results": [
                 {
                     "exported_collections_count": "0",
-                    "exported_count": "null",
+                    "exported_count": "5",
                     "exported_count_from_data_load": "null",
                     "exported_count_from_streaming_feed": "null"
                 }
