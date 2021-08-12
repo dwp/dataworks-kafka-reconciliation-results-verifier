@@ -37,7 +37,7 @@ def handler(event, context):
         logger = setup_logging("INFO")
         logger.info(f'Cloudwatch Event": {event}')
         logger.info(os.getcwd())
-        return handle_event(event)
+        handle_event(event)
     except Exception as err:
         logger.error(f'Exception occurred for invocation", "error_message": {err}')
 
@@ -120,7 +120,7 @@ def handle_event(event):
         queries_json_record = get_query_results(record.get("s3"))
         missing_export_count, export_count = get_counts(queries_json_record)
         message_payload = generate_message_payload(missing_export_count, export_count)
-        return send_sns_message(message_payload, args.sns_topic)
+        send_sns_message(message_payload, args.sns_topic)
 
 
 def get_query_results(s3_event_object):
@@ -276,4 +276,3 @@ def send_sns_message(payload, sns_topic_arn):
 
     response = sns_client.publish(TopicArn=sns_topic_arn, Message=json_message)
     logger.info(f"Response from Sns {response}")
-    return response
