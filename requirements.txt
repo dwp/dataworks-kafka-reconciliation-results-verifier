@@ -1,3 +1,2 @@
 argparse
 boto3
-moto

@@ -7,7 +7,7 @@ from unittest import TestCase, mock
 import boto3
 from moto import mock_s3, mock_sns
 
-from src.results_verifier_lambda import event_handler
+from results_verifier_lambda import event_handler
 
 
 class TestResultsVerifier(TestCase):
@@ -24,7 +24,7 @@ class TestResultsVerifier(TestCase):
 
     def test_count_missing_exports(self):
         path = Path(os.getcwd())
-        results_json_path = f"{path.parent.absolute()}/resources/results.json"
+        results_json_path = f"{path.parent.absolute()}/dataworks-kafka-reconciliation-results-verifier/resources/results.json"
         with open(results_json_path) as f:
             json_record = json.load(f)
 
@@ -122,7 +122,7 @@ class TestResultsVerifier(TestCase):
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
         path = Path(os.getcwd())
-        results_json_path = f"{path.parent.absolute()}/resources/results.json"
+        results_json_path = f"{path.parent.absolute()}/dataworks-kafka-reconciliation-results-verifier/resources/results.json"
         with open(results_json_path) as f:
             json_record = json.load(f)
         s3_client.put_object(
