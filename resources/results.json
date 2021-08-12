@@ -1,0 +1,273 @@
+{
+    "executed_by": "5a82b920-9f2f-4307-b855-b5cef99be9cf_1",
+    "execution_time": "1628686181.242618",
+    "query_results": [
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing imported databases",
+                "query_type": "additional",
+                "query_description": "Shows databases which have been exported in the snapshots sent to Crown, but not were missing from the imported historic data dump",
+                "query_file": "missing_imported_databases.sql",
+                "results_file": "missing_imported_databases.csv",
+                "show_column_names": false,
+                "order": 1
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing imported collections",
+                "query_type": "additional",
+                "query_description": "Shows collections which have been exported in the snapshots sent to Crown, but not were missing from the imported historic data dump - excludes collections that are in databases that have not been imported as a whole database",
+                "query_file": "missing_imported_collections.sql",
+                "results_file": "missing_imported_collections.csv",
+                "show_column_names": false,
+                "order": 2
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing imported id counts",
+                "query_type": "additional",
+                "query_description": "Shows counts and percentages of ids which were in the exported snapshots sent to Crown, but were missing from the import of the historic data dump - excludes id in collections or databases that have not been imported as a whole",
+                "query_file": "missing_imported_id_counts.sql",
+                "results_file": "missing_imported_id_counts.csv",
+                "show_column_names": true,
+                "order": 3
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing imported ids",
+                "query_type": "additional",
+                "query_description": "Shows the top X ids from each collection (where X is passed in as 'MANIFEST_REPORT_COUNT_OF_IDS') which were in the exported snapshots sent to Crown, but were missing from the import of the historic data dump - excludes id in collections or databases that have not been imported as a whole",
+                "query_file": "missing_imported_ids.sql",
+                "results_file": "missing_imported_ids.csv",
+                "show_column_names": false,
+                "order": 4
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Mismatched timestamps count earlier in the import",
+                "query_type": "additional",
+                "query_description": "Shows count and percentage of IDs which are in both export and import manifests but have a timestamp that is earlier in the import",
+                "query_file": "mismatched_timestamps_earlier_in_import_count.sql",
+                "results_file": "mismatched_timestamps_earlier_in_import_count.csv",
+                "show_column_names": true,
+                "order": 5
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Timestamps earlier in export",
+                "query_type": "additional",
+                "query_description": "Shows IDs which are in both export and import manifests but have an earlier timestamp in the export manifest",
+                "query_file": "timestamps_earlier_in_export.sql",
+                "results_file": "timestamps_earlier_in_export.csv",
+                "show_column_names": true,
+                "order": 6
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Timestamps earlier in import",
+                "query_type": "additional",
+                "query_description": "Shows IDs which are in both export and import manifests but have an earlier timestamp in the import manifest",
+                "query_file": "timestamps_earlier_in_import.sql",
+                "results_file": "timestamps_earlier_in_import.csv",
+                "show_column_names": true,
+                "order": 7
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing exported ids",
+                "query_type": "additional",
+                "query_description": "Shows the top X ids from each collection (where X is passed in as 'MANIFEST_REPORT_COUNT_OF_IDS') which were imported from the historic data dump, but not were missing from the exported snapshots sent to Crown - excludes id in collections or databases that have not been exported as a whole",
+                "query_file": "missing_exported_ids.sql",
+                "results_file": "missing_exported_ids.csv",
+                "show_column_names": false,
+                "order": 8
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Import totals by collection",
+                "query_type": "additional",
+                "query_description": "Shows stats on the total amount of data imported per collection",
+                "query_file": "import_totals_by_collection.sql",
+                "results_file": "import_totals_by_collection.csv",
+                "show_column_names": true,
+                "order": 9
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Export totals by collection",
+                "query_type": "additional",
+                "query_description": "Shows stats on the total amount of data exported per collection",
+                "query_file": "export_totals_by_collection.sql",
+                "results_file": "export_totals_by_collection.csv",
+                "show_column_names": true,
+                "order": 10
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing exported databases",
+                "query_type": "main",
+                "query_description": "Shows databases which have been imported from the historic data dump, but not were missing from the exported snapshots sent to Crown",
+                "query_file": "missing_exported_databases.sql",
+                "results_file": "missing_exported_databases.csv",
+                "show_column_names": false,
+                "order": 1
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing exported collections",
+                "query_type": "main",
+                "query_description": "Shows collections which have been imported from the historic data dump, but not were missing from the exported snapshots sent to Crown - excludes collections that are in databases that have not been exported as a whole database",
+                "query_file": "missing_exported_collections.sql",
+                "results_file": "missing_exported_collections.csv",
+                "show_column_names": false,
+                "order": 2
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Export totals",
+                "query_type": "main",
+                "query_description": "Shows stats on the total amount of data exported",
+                "query_file": "export_totals.sql",
+                "results_file": "export_totals.csv",
+                "show_column_names": true,
+                "order": 3
+            },
+            "query_results": [
+                {
+                    "exported_collections_count": "0",
+                    "exported_count": "5",
+                    "exported_count_from_data_load": "null",
+                    "exported_count_from_streaming_feed": "null"
+                }
+            ]
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Import totals",
+                "query_type": "main",
+                "query_description": "Shows stats on the total amount of data imported",
+                "query_file": "import_totals.sql",
+                "results_file": "import_totals.csv",
+                "show_column_names": true,
+                "order": 4
+            },
+            "query_results": [
+                {
+                    "imported_collections_count": "0",
+                    "imported_count": "null"
+                }
+            ]
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing exported totals",
+                "query_type": "main",
+                "query_description": "Shows stats on the total amount of data missing from export",
+                "query_file": "missing_exported_totals.sql",
+                "results_file": "missing_exported_totals.csv",
+                "show_column_names": true,
+                "order": 5
+            },
+            "query_results": [
+                {
+                    "missing_exported_count": 8
+                }
+            ]
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing imported totals",
+                "query_type": "main",
+                "query_description": "Shows stats on the total amount of data missing from import",
+                "query_file": "missing_imported_totals.sql",
+                "results_file": "missing_imported_totals.csv",
+                "show_column_names": true,
+                "order": 6
+            },
+            "query_results": [
+                {
+                    "missing_imported_count": "null"
+                }
+            ]
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Missing exported id counts",
+                "query_type": "main",
+                "query_description": "Shows counts and percentages of ids which were imported from the historic data dump, but not were missing from the exported snapshots sent to Crown - excludes id in collections or databases that have not been exported as a whole",
+                "query_file": "missing_exported_id_counts.sql",
+                "results_file": "missing_exported_id_counts.csv",
+                "show_column_names": true,
+                "order": 7
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Mismatched timestamps count earlier in the export",
+                "query_type": "main",
+                "query_description": "Shows count and percentage of IDs which are in both export and import manifests but have a timestamp that is earlier in the export",
+                "query_file": "mismatched_timestamps_earlier_in_export_count.sql",
+                "results_file": "mismatched_timestamps_earlier_in_export_count.csv",
+                "show_column_names": true,
+                "order": 8
+            },
+            "query_results": []
+        },
+        {
+            "query_details": {
+                "enabled": true,
+                "query_name": "Output missing exported ids after given timestamp",
+                "query_type": "specific",
+                "query_description": "Output missing exported ids after given timestamp",
+                "query_file": "missing_exported_ids_after_date.sql",
+                "results_file": "missing_exported_ids_after_date.csv",
+                "show_column_names": false,
+                "order": 1
+            },
+            "query_results": []
+        }
+    ]
+}

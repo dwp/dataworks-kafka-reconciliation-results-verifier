@@ -1,0 +1,16 @@
+.idea/
+lambda.zip
+.terraform/
+credentials.yml
+terraform.tfvars
+*.iml
+.DS_Store
+aviator_pipeline.yml
+**/*.zip
+**/.tox/
+**/build/
+**/dist/
+**/tests/__pycache__/
+**/*.egg-info/
+**/.vscode/
+venv/*
