@@ -6,8 +6,10 @@ import socket
 import sys
 
 import boto3
+from botocore.config import Config
 
-from src.results_verifier_lambda.utility import aws_helper
+s3_client = None
+sns_client = None
 
 ERROR_NOTIFICATION_TYPE = "Error"
 WARNING_NOTIFICATION_TYPE = "Warning"
@@ -124,7 +126,7 @@ def handle_event(event):
 def get_query_results(s3_event_object):
     bucket = s3_event_object['bucket']['name']
     key = s3_event_object['object']['key']
-    results_file = aws_helper.get_s3_file(bucket, key)
+    results_file = get_s3_file(bucket, key)
     return results_file
 
 
@@ -190,6 +192,42 @@ def get_escaped_json_string(json_string):
     return escaped_string
 
 
+def get_client(service_name, region=None, read_timeout_seconds=120):
+    """Creates a standardised boto3 client for the given service.
+
+    Keyword arguments:
+    service_name -- the aws service name (i.e. s3, lambda etc)
+    region -- use a specific region for the client (defaults to no region with None)
+    read_timeout -- timeout for operations, defaults to 120 seconds
+    """
+    logger.info(f"Getting client for service {service_name}")
+    max_connections = 25 if service_name.lower() == "s3" else 10
+
+    client_config = Config(
+        read_timeout=read_timeout_seconds,
+        max_pool_connections=max_connections,
+        retries={"max_attempts": 10, "mode": "standard"},
+    )
+
+    if region is None:
+        return boto3.client(service_name, config=client_config)
+    else:
+        return boto3.client(
+            service_name, region_name=region, config=client_config
+        )
+
+
+def get_s3_file(bucket, key):
+    global s3_client
+    if s3_client is None:
+        s3_client = get_client(service_name='s3')
+
+    response = s3_client.get_object(Bucket=bucket, key=key)
+    logger.info(f"Response from S3 {response}")
+    data = json.loads(response['Body'].read())
+    return data
+
+
 def send_sns_message(
         payload,
         sns_topic_arn
@@ -201,6 +239,7 @@ def send_sns_message(
         sns_topic_arn (string): the arn for the SNS topic
 
     """
+    global sns_client
 
     json_message = json.dumps(payload)
 
@@ -209,4 +248,9 @@ def send_sns_message(
         f'Publishing payload to SNS", "payload": {dumped_payload}, "sns_topic_arn": "{sns_topic_arn}"'
     )
 
-    return aws_helper.publish_sns_message(sns_topic_arn, json_message)
+    if sns_client is None:
+        sns_client = get_client(service_name='sns')
+
+    response = sns_client.publish(TopicArn=sns_topic_arn, Message=json_message)
+    logger.info(f"Response from Sns {response}")
+    return response

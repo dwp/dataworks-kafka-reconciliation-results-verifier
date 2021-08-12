@@ -10,7 +10,7 @@ from src.results_verifier_lambda import event_handler
 class TestResultsVerifier(unittest.TestCase):
     def test_count_missing_exports(self):
         path = Path(os.getcwd())
-        results_json_path = f"{path.parent.absolute()}/dataworks-kafka-reconciliation-results-verifier/resources/results.json"
+        results_json_path = f"{path.parent.absolute()}/resources/results.json"
         with open(results_json_path) as f:
             json_record = json.load(f)
 
