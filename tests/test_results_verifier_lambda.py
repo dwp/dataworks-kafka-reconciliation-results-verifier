@@ -6,7 +6,6 @@ from unittest import TestCase, mock
 
 import boto3
 from moto import mock_s3, mock_sns, mock_sqs
-
 from results_verifier_lambda import event_handler
 
 
@@ -14,7 +13,11 @@ class TestResultsVerifier(TestCase):
     @mock_s3
     @mock_sqs
     def test_entry_point(self):
-        self.setUp_s3()
+        path = Path(os.getcwd())
+        results_json_path = f"{path.parent.absolute()}/dataworks-kafka-reconciliation-results-verifier/resources/results.json"
+        with open(results_json_path) as f:
+            json_record = json.load(f)
+        self.setUp_s3(json_record)
         sqs_client = boto3.client("sqs", region_name="eu-west-2")
         sqs_url = sqs_client.create_queue(QueueName="test")["QueueUrl"]
         sqs_arn = sqs_client.get_queue_attributes(QueueUrl=sqs_url)["Attributes"][
@@ -47,6 +50,38 @@ class TestResultsVerifier(TestCase):
 
             self.assertEqual(message, expected_message)
 
+    @mock_s3
+    @mock_sqs
+    def test_entry_point_null_results(self):
+        null_json_record = self.get_record_containing_nulls()
+        self.setUp_s3(null_json_record)
+        sqs_client = boto3.client("sqs", region_name="eu-west-2")
+        sqs_url = sqs_client.create_queue(QueueName='test')["QueueUrl"]
+        sqs_arn = sqs_client.get_queue_attributes(QueueUrl=sqs_url)["Attributes"]["QueueArn"]
+        sns_topic_arn = self.setup_sns(sqs_arn)
+
+        event = self.get_event()
+        with mock.patch.dict(
+                os.environ, {"SNS_TOPIC": sns_topic_arn, "AWS_REGION": "eu-west-2"}
+        ):
+            event_handler.handler(event, None)
+            messages = sqs_client.receive_message(QueueUrl=sqs_url, MaxNumberOfMessages=10)["Messages"]
+            self.assertEqual(1, len(messages))
+            message_body = json.loads(messages[0]['Body'])
+            message = json.loads(message_body['Message'])
+
+            expected_message = {
+                "severity": "High",
+                "notification_type": "Information",
+                "slack_username": "AWS Lambda Notification",
+                "title_text": "Kafka reconciliation successful",
+                "custom_elements": [
+                    {"key": "Exported count", "value": "0"}
+                ]
+            }
+
+            self.assertEqual(message, expected_message)
+
     def test_count_missing_exports(self):
         path = Path(os.getcwd())
         results_json_path = f"{path.parent.absolute()}/dataworks-kafka-reconciliation-results-verifier/resources/results.json"
@@ -58,23 +93,7 @@ class TestResultsVerifier(TestCase):
         self.assertEqual(export_count, 5)
 
     def test_count_missing_exports_null(self):
-        null_json_record = {
-            "query_results": [
-                {
-                    "query_details": {
-                        "query_name": "Missing exported totals",
-                    },
-                    "query_results": [{"missing_exported_count": "null"}],
-                },
-                {
-                    "query_details": {
-                        "query_name": "Export totals",
-                    },
-                    "query_results": [{"exported_count": "null"}],
-                },
-            ]
-        }
-
+        null_json_record = self.get_record_containing_nulls()
         missing_export_count, export_count = event_handler.get_counts(null_json_record)
         self.assertEqual(missing_export_count, 0)
         self.assertEqual(export_count, 0)
@@ -139,17 +158,32 @@ class TestResultsVerifier(TestCase):
             ]
         }
 
+    @staticmethod
+    def get_record_containing_nulls():
+        return {
+            "query_results": [
+                {
+                    "query_details": {
+                        "query_name": "Missing exported totals",
+                    },
+                    "query_results": [{"missing_exported_count": "null"}],
+                },
+                {
+                    "query_details": {
+                        "query_name": "Export totals",
+                    },
+                    "query_results": [{"exported_count": "null"}],
+                },
+            ]
+        }
+
     @mock_s3
-    def setUp_s3(self):
+    def setUp_s3(self, json_record):
         s3_client = boto3.client("s3")
         s3_client.create_bucket(
             Bucket="results_verifier_test",
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
-        path = Path(os.getcwd())
-        results_json_path = f"{path.parent.absolute()}/dataworks-kafka-reconciliation-results-verifier/resources/results.json"
-        with open(results_json_path) as f:
-            json_record = json.load(f)
         s3_client.put_object(
             Body=json.dumps(json_record),
             Bucket="results_verifier_test",
