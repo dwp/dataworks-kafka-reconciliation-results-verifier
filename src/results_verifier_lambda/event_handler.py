@@ -136,7 +136,7 @@ def get_counts(queries_json_record):
         d
         for d in results_list
         if d["query_details"]["query_name"]
-        in ["Missing exported totals", "Export totals"]
+           in ["Missing exported totals", "Export totals"]
     ]
     missing_export_count = count_missing_exports(filtered_list)
     export_count = count_total_exports(filtered_list)
@@ -185,14 +185,14 @@ def generate_message_payload(missing_exported_count, exported_count):
     """
     custom_elements = [{"key": "Exported count", "value": str(exported_count)}]
 
-    title_text = f"Kafka reconciliation results"
-
     if missing_exported_count == 0:
         severity = HIGH_SEVERITY
         notification_type = INFORMATION_NOTIFICATION_TYPE
+        title_text = "Kafka reconciliation successful"
     else:
         severity = CRITICAL_SEVERITY
         notification_type = ERROR_NOTIFICATION_TYPE
+        title_text = "Kafka reconciliation - missing records"
         custom_elements.append(
             {"key": "Missing exports count", "value": str(missing_exported_count)}
         )

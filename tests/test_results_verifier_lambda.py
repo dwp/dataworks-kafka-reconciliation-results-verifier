@@ -60,7 +60,7 @@ class TestResultsVerifier(TestCase):
             "severity": "Critical",
             "notification_type": "Error",
             "slack_username": "AWS Lambda Notification",
-            "title_text": "Kafka reconciliation results",
+            "title_text": "Kafka reconciliation - missing records",
             "custom_elements": [
                 {"key": "Exported count", "value": "100"},
                 {"key": "Missing exports count", "value": "5"},
@@ -74,7 +74,7 @@ class TestResultsVerifier(TestCase):
             "severity": "High",
             "notification_type": "Information",
             "slack_username": "AWS Lambda Notification",
-            "title_text": "Kafka reconciliation results",
+            "title_text": "Kafka reconciliation successful",
             "custom_elements": [{"key": "Exported count", "value": "50"}],
         }
         self.assertEqual(result, expected_result)
