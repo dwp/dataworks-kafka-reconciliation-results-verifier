@@ -11,15 +11,16 @@ from src.results_verifier_lambda import event_handler
 
 
 class TestResultsVerifier(TestCase):
-
     @mock_s3
     def test_entry_point(self):
         self.setUp_s3()
         sns_topic_arn = self.setup_sns()
         event = self.get_event()
-        with mock.patch.dict(os.environ, {"SNS_TOPIC": sns_topic_arn, "AWS_REGION": "eu-west-2"}):
+        with mock.patch.dict(
+            os.environ, {"SNS_TOPIC": sns_topic_arn, "AWS_REGION": "eu-west-2"}
+        ):
             result = event_handler.handler(event, None)
-            self.assertEqual(result['ResponseMetadata']['HTTPStatusCode'], 200)
+            self.assertEqual(result["ResponseMetadata"]["HTTPStatusCode"], 200)
 
     def test_count_missing_exports(self):
         path = Path(os.getcwd())
@@ -38,24 +39,14 @@ class TestResultsVerifier(TestCase):
                     "query_details": {
                         "query_name": "Missing exported totals",
                     },
-                    "query_results": [
-                        {
-                            "missing_exported_count": "null"
-                        }
-                    ]
+                    "query_results": [{"missing_exported_count": "null"}],
                 },
                 {
                     "query_details": {
                         "query_name": "Export totals",
                     },
-                    "query_results": [
-                        {
-
-                            "exported_count": "null"
-                        }
-                    ]
-                }
-
+                    "query_results": [{"exported_count": "null"}],
+                },
             ]
         }
 
@@ -66,27 +57,25 @@ class TestResultsVerifier(TestCase):
     def test_generate_message_payload_missing_exports(self):
         result = event_handler.generate_message_payload(5, 100)
         expected_result = {
-            'severity': 'Critical',
-            'notification_type': 'Error',
-            'slack_username': 'AWS Lambda Notification',
-            'title_text': 'Kafka reconciliation results',
-            'custom_elements': [
-                {'key': 'Exported count', 'value': '100'},
-                {'key': 'Missing exports count', 'value': '5'}
-            ]
+            "severity": "Critical",
+            "notification_type": "Error",
+            "slack_username": "AWS Lambda Notification",
+            "title_text": "Kafka reconciliation results",
+            "custom_elements": [
+                {"key": "Exported count", "value": "100"},
+                {"key": "Missing exports count", "value": "5"},
+            ],
         }
         self.assertEqual(result, expected_result)
 
     def test_generate_message_payload_no_missing_exports(self):
         result = event_handler.generate_message_payload(0, 50)
         expected_result = {
-            'severity': 'High',
-            'notification_type': 'Information',
-            'slack_username': 'AWS Lambda Notification',
-            'title_text': 'Kafka reconciliation results',
-            'custom_elements': [
-                {'key': 'Exported count', 'value': '50'}
-            ]
+            "severity": "High",
+            "notification_type": "Information",
+            "slack_username": "AWS Lambda Notification",
+            "title_text": "Kafka reconciliation results",
+            "custom_elements": [{"key": "Exported count", "value": "50"}],
         }
         self.assertEqual(result, expected_result)
 
@@ -100,33 +89,27 @@ class TestResultsVerifier(TestCase):
                     "awsRegion": "eu-west-2",
                     "eventTime": "1970-01-01T00:00:00.000Z",
                     "eventName": "ObjectCreated:Put",
-                    "userIdentity": {
-                        "principalId": "EXAMPLE"
-                    },
-                    "requestParameters": {
-                        "sourceIPAddress": "127.0.0.1"
-                    },
+                    "userIdentity": {"principalId": "EXAMPLE"},
+                    "requestParameters": {"sourceIPAddress": "127.0.0.1"},
                     "responseElements": {
                         "x-amz-request-id": "EXAMPLE123456789",
-                        "x-amz-id-2": "EXAMPLE123/5678abcdefghijklambdaisawesome/mnopqrstuvwxyzABCDEFGH"
+                        "x-amz-id-2": "EXAMPLE123/5678abcdefghijklambdaisawesome/mnopqrstuvwxyzABCDEFGH",
                     },
                     "s3": {
                         "s3SchemaVersion": "1.0",
                         "configurationId": "testConfigRule",
                         "bucket": {
                             "name": "results_verifier_test",
-                            "ownerIdentity": {
-                                "principalId": "EXAMPLE"
-                            },
-                            "arn": "arn:aws:s3:::example-bucket"
+                            "ownerIdentity": {"principalId": "EXAMPLE"},
+                            "arn": "arn:aws:s3:::example-bucket",
                         },
                         "object": {
                             "key": "results/query_results.json",
                             "size": 1024,
                             "eTag": "0123456789abcdef0123456789abcdef",
-                            "sequencer": "0A1B2C3D4E5F678901"
-                        }
-                    }
+                            "sequencer": "0A1B2C3D4E5F678901",
+                        },
+                    },
                 }
             ]
         }
@@ -136,9 +119,7 @@ class TestResultsVerifier(TestCase):
         s3_client = boto3.client("s3")
         s3_client.create_bucket(
             Bucket="results_verifier_test",
-            CreateBucketConfiguration={
-                'LocationConstraint': 'eu-west-2'
-            },
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
         path = Path(os.getcwd())
         results_json_path = f"{path.parent.absolute()}/resources/results.json"
@@ -148,7 +129,6 @@ class TestResultsVerifier(TestCase):
             Body=json.dumps(json_record),
             Bucket="results_verifier_test",
             Key="results/query_results.json",
-
         )
         event_handler.s3_client = s3_client
 

@@ -115,51 +115,58 @@ def setup_logging(logger_level):
 
 
 def handle_event(event):
-    records = event.get('Records', [])
+    records = event.get("Records", [])
     for record in records:
-        queries_json_record = get_query_results(record.get('s3'))
+        queries_json_record = get_query_results(record.get("s3"))
         missing_export_count, export_count = get_counts(queries_json_record)
         message_payload = generate_message_payload(missing_export_count, export_count)
         return send_sns_message(message_payload, args.sns_topic)
 
 
 def get_query_results(s3_event_object):
-    bucket = s3_event_object['bucket']['name']
-    key = s3_event_object['object']['key']
+    bucket = s3_event_object["bucket"]["name"]
+    key = s3_event_object["object"]["key"]
     results_file = get_s3_file(bucket, key)
     return results_file
 
 
 def get_counts(queries_json_record):
     results_list = queries_json_record.get("query_results")
-    filtered_list = \
-        [
-            d for d in results_list if d['query_details']['query_name'] in ["Missing exported totals", "Export totals"]
-        ]
+    filtered_list = [
+        d
+        for d in results_list
+        if d["query_details"]["query_name"]
+        in ["Missing exported totals", "Export totals"]
+    ]
     missing_export_count = count_missing_exports(filtered_list)
     export_count = count_total_exports(filtered_list)
     return missing_export_count, export_count
 
 
 def count_missing_exports(results_list):
-    missing_exported_dict = [d for d in results_list if d['query_details']['query_name'] == "Missing exported totals"][
-        0]
-    logger.info(f'Missing exported id result object {missing_exported_dict}')
+    missing_exported_dict = [
+        d
+        for d in results_list
+        if d["query_details"]["query_name"] == "Missing exported totals"
+    ][0]
+    logger.info(f"Missing exported id result object {missing_exported_dict}")
     count = count_query_results(missing_exported_dict, "missing_exported_count")
-    logger.info(f'Missing exported count {count}')
+    logger.info(f"Missing exported count {count}")
     return count
 
 
 def count_total_exports(results_list):
-    total_exported_dict = [d for d in results_list if d['query_details']['query_name'] == "Export totals"][0]
-    logger.info(f'Total exports result object {total_exported_dict}')
+    total_exported_dict = [
+        d for d in results_list if d["query_details"]["query_name"] == "Export totals"
+    ][0]
+    logger.info(f"Total exports result object {total_exported_dict}")
     count = count_query_results(total_exported_dict, "exported_count")
-    logger.info(f'Exported count {count}')
+    logger.info(f"Exported count {count}")
     return count
 
 
 def count_query_results(query_dict, result_name):
-    query_results = query_dict['query_results']
+    query_results = query_dict["query_results"]
     count = 0
     for result in query_results:
         if result.get(result_name, 0) != "null":
@@ -168,10 +175,7 @@ def count_query_results(query_dict, result_name):
     return count
 
 
-def generate_message_payload(
-        missing_exported_count,
-        exported_count
-):
+def generate_message_payload(missing_exported_count, exported_count):
     """Generates a payload for a monitoring message.
 
     Arguments:
@@ -179,9 +183,7 @@ def generate_message_payload(
         exported_count (int): the count of the total exports
 
     """
-    custom_elements = [
-        {"key": "Exported count", "value": str(exported_count)}
-    ]
+    custom_elements = [{"key": "Exported count", "value": str(exported_count)}]
 
     title_text = f"Kafka reconciliation results"
 
@@ -204,9 +206,7 @@ def generate_message_payload(
     }
 
     dumped_payload = get_escaped_json_string(payload)
-    logger.info(
-        f'Generated monitoring SNS payload", "payload": {dumped_payload}'
-    )
+    logger.info(f'Generated monitoring SNS payload", "payload": {dumped_payload}')
 
     return payload
 
@@ -240,26 +240,21 @@ def get_client(service_name, region=None, read_timeout_seconds=120):
     if region is None:
         return boto3.client(service_name, config=client_config)
     else:
-        return boto3.client(
-            service_name, region_name=region, config=client_config
-        )
+        return boto3.client(service_name, region_name=region, config=client_config)
 
 
 def get_s3_file(bucket, key):
     global s3_client
     if s3_client is None:
-        s3_client = get_client(service_name='s3')
+        s3_client = get_client(service_name="s3")
 
     response = s3_client.get_object(Bucket=bucket, Key=key)
     logger.info(f"Response from S3 {response}")
-    data = json.loads(response['Body'].read())
+    data = json.loads(response["Body"].read())
     return data
 
 
-def send_sns_message(
-        payload,
-        sns_topic_arn
-):
+def send_sns_message(payload, sns_topic_arn):
     """Publishes the message to sns.
 
     Arguments:
@@ -277,7 +272,7 @@ def send_sns_message(
     )
 
     if sns_client is None:
-        sns_client = get_client(service_name='sns')
+        sns_client = get_client(service_name="sns")
 
     response = sns_client.publish(TopicArn=sns_topic_arn, Message=json_message)
     logger.info(f"Response from Sns {response}")
