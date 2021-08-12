@@ -1,4 +1,4 @@
-name: Perform Python Format
+name: Pull Request
 
 on: pull_request
 
