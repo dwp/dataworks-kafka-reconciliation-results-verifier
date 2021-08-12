@@ -9,9 +9,6 @@ from moto import mock_s3, mock_sns
 
 from src.results_verifier_lambda import event_handler
 
-MOCK_LOCALHOST_URL = "http://localhost:1000"
-MOTO_SERVER_URL = "http://127.0.0.1:5000"
-
 
 class TestResultsVerifier(TestCase):
 
