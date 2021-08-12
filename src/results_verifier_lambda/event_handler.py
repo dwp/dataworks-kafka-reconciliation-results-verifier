@@ -32,12 +32,12 @@ def handler(event, context):
     """
     global args
     global logger
-
-    logger = setup_logging("INFO")
-    logger.info(f'Cloudwatch Event": {event}')
     try:
+        args = get_parameters()
+        logger = setup_logging("INFO")
+        logger.info(f'Cloudwatch Event": {event}')
         logger.info(os.getcwd())
-        handle_event(event)
+        return handle_event(event)
     except Exception as err:
         logger.error(f'Exception occurred for invocation", "error_message": {err}')
 
@@ -120,7 +120,7 @@ def handle_event(event):
         queries_json_record = get_query_results(record.get('s3'))
         missing_export_count, export_count = get_counts(queries_json_record)
         message_payload = generate_message_payload(missing_export_count, export_count)
-        send_sns_message(message_payload, args.sns_topic)
+        return send_sns_message(message_payload, args.sns_topic)
 
 
 def get_query_results(s3_event_object):
@@ -250,7 +250,7 @@ def get_s3_file(bucket, key):
     if s3_client is None:
         s3_client = get_client(service_name='s3')
 
-    response = s3_client.get_object(Bucket=bucket, key=key)
+    response = s3_client.get_object(Bucket=bucket, Key=key)
     logger.info(f"Response from S3 {response}")
     data = json.loads(response['Body'].read())
     return data

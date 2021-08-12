@@ -1,16 +1,28 @@
 import json
 import logging
 import os
-import unittest
 from pathlib import Path
+from unittest import TestCase, mock
+
+import boto3
+from moto import mock_s3, mock_sns
 
 from src.results_verifier_lambda import event_handler
 
+MOCK_LOCALHOST_URL = "http://localhost:1000"
+MOTO_SERVER_URL = "http://127.0.0.1:5000"
 
-class TestResultsVerifier(unittest.TestCase):
 
+class TestResultsVerifier(TestCase):
+
+    @mock_s3
     def test_entry_point(self):
-        pass
+        self.setUp_s3()
+        sns_topic_arn = self.setup_sns()
+        event = self.get_event()
+        with mock.patch.dict(os.environ, {"SNS_TOPIC": sns_topic_arn, "AWS_REGION": "eu-west-2"}):
+            result = event_handler.handler(event, None)
+            self.assertEqual(result['ResponseMetadata']['HTTPStatusCode'], 200)
 
     def test_count_missing_exports(self):
         path = Path(os.getcwd())
@@ -112,7 +124,7 @@ class TestResultsVerifier(unittest.TestCase):
                             "arn": "arn:aws:s3:::example-bucket"
                         },
                         "object": {
-                            "key": "query_results.json",
+                            "key": "results/query_results.json",
                             "size": 1024,
                             "eTag": "0123456789abcdef0123456789abcdef",
                             "sequencer": "0A1B2C3D4E5F678901"
@@ -121,6 +133,37 @@ class TestResultsVerifier(unittest.TestCase):
                 }
             ]
         }
+
+    @mock_s3
+    def setUp_s3(self):
+        s3_client = boto3.client("s3")
+        s3_client.create_bucket(
+            Bucket="results_verifier_test",
+            CreateBucketConfiguration={
+                'LocationConstraint': 'eu-west-2'
+            },
+        )
+        path = Path(os.getcwd())
+        results_json_path = f"{path.parent.absolute()}/resources/results.json"
+        with open(results_json_path) as f:
+            json_record = json.load(f)
+        s3_client.put_object(
+            Body=json.dumps(json_record),
+            Bucket="results_verifier_test",
+            Key="results/query_results.json",
+
+        )
+        event_handler.s3_client = s3_client
+
+    @mock_sns
+    def setup_sns(self):
+        sns_client = boto3.client(service_name="sns", region_name="eu-west-2")
+        sns_client.create_topic(
+            Name="monitoring_topic", Attributes={"DisplayName": "test-topic"}
+        )
+        topics_json = sns_client.list_topics()
+        event_handler.sns_client = sns_client
+        return topics_json["Topics"][0]["TopicArn"]
 
     def setUp(self):
         event_handler.logger = logging.getLogger()
