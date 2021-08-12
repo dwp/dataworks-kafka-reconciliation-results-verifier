@@ -119,7 +119,7 @@ def handle_event(event):
     for record in records:
         queries_json_record = get_query_results(record.get('s3'))
         missing_export_count, export_count = get_counts(queries_json_record)
-        message_payload = generate_message_payload(missing_export_count)
+        message_payload = generate_message_payload(missing_export_count, export_count)
         send_sns_message(message_payload, args.sns_topic)
 
 
@@ -169,12 +169,14 @@ def count_query_results(query_dict, result_name):
 
 
 def generate_message_payload(
+        missing_exported_count,
         exported_count
 ):
     """Generates a payload for a monitoring message.
 
     Arguments:
-        exported_count (int): the count of the missing records
+        missing_exported_count (int): the count of the missing records
+        exported_count (int): the count of the total exports
 
     """
     custom_elements = [
@@ -183,12 +185,15 @@ def generate_message_payload(
 
     title_text = f"Kafka reconciliation results"
 
-    if exported_count == 0:
+    if missing_exported_count == 0:
         severity = HIGH_SEVERITY
         notification_type = INFORMATION_NOTIFICATION_TYPE
     else:
         severity = CRITICAL_SEVERITY
         notification_type = ERROR_NOTIFICATION_TYPE
+        custom_elements.append(
+            {"key": "Missing exports count", "value": str(missing_exported_count)}
+        )
 
     payload = {
         "severity": severity,
