@@ -247,7 +247,7 @@ def get_s3_file(bucket, key):
     global s3_client
     if s3_client is None:
         s3_client = get_client(service_name="s3")
-
+    logger.info(f"Retrieving S3 object: {key}, from bucket {bucket}")
     response = s3_client.get_object(Bucket=bucket, Key=key)
     logger.info(f"Response from S3 {response}")
     data = json.loads(response["Body"].read())
