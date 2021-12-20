@@ -117,9 +117,11 @@ def setup_logging(logger_level):
 def handle_event(event):
     records = event.get("Records", [])
     for record in records:
-        queries_json_record = get_query_results(record.get("s3"))
+        queries_json_record, file_key = get_query_results(record.get("s3"))
         missing_export_count, export_count = get_counts(queries_json_record)
-        message_payload = generate_message_payload(missing_export_count, export_count)
+        message_payload = generate_message_payload(
+            missing_export_count, export_count, file_key
+        )
         send_sns_message(message_payload, args.sns_topic)
 
 
@@ -127,7 +129,7 @@ def get_query_results(s3_event_object):
     bucket = s3_event_object["bucket"]["name"]
     key = s3_event_object["object"]["key"]
     results_file = get_s3_file(bucket, key)
-    return results_file
+    return results_file, key
 
 
 def get_counts(queries_json_record):
@@ -175,12 +177,13 @@ def count_query_results(query_dict, result_name):
     return count
 
 
-def generate_message_payload(missing_exported_count, exported_count):
+def generate_message_payload(missing_exported_count, exported_count, file_key):
     """Generates a payload for a monitoring message.
 
     Arguments:
         missing_exported_count (int): the count of the missing records
         exported_count (int): the count of the total exports
+        file_key (str): the s3 key of the report file
 
     """
     custom_elements = [{"key": "Exported count", "value": str(exported_count)}]
@@ -195,6 +198,9 @@ def generate_message_payload(missing_exported_count, exported_count):
         title_text = "Kafka reconciliation - missing records"
         custom_elements.append(
             {"key": "Missing exports count", "value": str(missing_exported_count)}
+        )
+        custom_elements.append(
+            {"key": "S3-Location", "value": f"s3://{{manifest-bucket}}/{file_key}"}
         )
 
     payload = {
