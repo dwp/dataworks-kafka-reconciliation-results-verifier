@@ -47,7 +47,7 @@ class TestResultsVerifier(TestCase):
                     {"key": "Missing exports count", "value": "8"},
                     {
                         "key": "S3-Location",
-                        "value": f"s3://manifest-bucket/results/query_results.json",
+                        "value": "s3://{manifest-bucket}/results/query_results.json",
                     },
                 ],
             }
@@ -121,7 +121,7 @@ class TestResultsVerifier(TestCase):
                 {"key": "Missing exports count", "value": "5"},
                 {
                     "key": "S3-Location",
-                    "value": f"s3://manifest-bucket/results/query_results.json",
+                    "value": "s3://{manifest-bucket}/results/query_results.json",
                 },
             ],
         }

@@ -200,7 +200,7 @@ def generate_message_payload(missing_exported_count, exported_count, file_key):
             {"key": "Missing exports count", "value": str(missing_exported_count)}
         )
         custom_elements.append(
-            {"key": "S3-Location", "value": f"s3://manifest-bucket/{file_key}"}
+            {"key": "S3-Location", "value": f"s3://{{manifest-bucket}}/{file_key}"}
         )
 
     payload = {
