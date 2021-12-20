@@ -20,9 +20,9 @@ class TestResultsVerifier(TestCase):
         self.setUp_s3(json_record)
         sqs_client = boto3.client("sqs", region_name="eu-west-2")
         sqs_url = sqs_client.create_queue(QueueName="test")["QueueUrl"]
-        sqs_arn = sqs_client.get_queue_attributes(QueueUrl=sqs_url)["Attributes"][
-            "QueueArn"
-        ]
+        sqs_arn = sqs_client.get_queue_attributes(
+            QueueUrl=sqs_url, AttributeNames=["All"]
+        )["Attributes"]["QueueArn"]
         sns_topic_arn = self.setup_sns(sqs_arn)
 
         event = self.get_event()
@@ -45,9 +45,12 @@ class TestResultsVerifier(TestCase):
                 "custom_elements": [
                     {"key": "Exported count", "value": "5"},
                     {"key": "Missing exports count", "value": "8"},
+                    {"key": "S3-Location", "value": f"s3://manifest-bucket/results/query_results.json"},
                 ],
             }
-
+            print("£££££££££")
+            print(message)
+            print(expected_message)
             self.assertEqual(message, expected_message)
 
     @mock_s3
@@ -57,9 +60,10 @@ class TestResultsVerifier(TestCase):
         self.setUp_s3(null_json_record)
         sqs_client = boto3.client("sqs", region_name="eu-west-2")
         sqs_url = sqs_client.create_queue(QueueName="test")["QueueUrl"]
-        sqs_arn = sqs_client.get_queue_attributes(QueueUrl=sqs_url)["Attributes"][
-            "QueueArn"
-        ]
+        sqs_arn = sqs_client.get_queue_attributes(
+            QueueUrl=sqs_url, AttributeNames=["All"]
+        )["Attributes"]["QueueArn"]
+
         sns_topic_arn = self.setup_sns(sqs_arn)
 
         event = self.get_event()
@@ -101,7 +105,7 @@ class TestResultsVerifier(TestCase):
         self.assertEqual(export_count, 0)
 
     def test_generate_message_payload_missing_exports(self):
-        result = event_handler.generate_message_payload(5, 100)
+        result = event_handler.generate_message_payload(5, 100, "results/query_results.json")
         expected_result = {
             "severity": "Critical",
             "notification_type": "Error",
@@ -110,12 +114,16 @@ class TestResultsVerifier(TestCase):
             "custom_elements": [
                 {"key": "Exported count", "value": "100"},
                 {"key": "Missing exports count", "value": "5"},
+                {"key": "S3-Location", "value": f"s3://manifest-bucket/results/query_results.json"},
             ],
         }
+        print("£££££££££")
+        print(result)
+        print(expected_result)
         self.assertEqual(result, expected_result)
 
     def test_generate_message_payload_no_missing_exports(self):
-        result = event_handler.generate_message_payload(0, 50)
+        result = event_handler.generate_message_payload(0, 50, "results/query_results.json")
         expected_result = {
             "severity": "High",
             "notification_type": "Information",
