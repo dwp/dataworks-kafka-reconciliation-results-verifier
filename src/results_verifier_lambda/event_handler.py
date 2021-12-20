@@ -119,7 +119,9 @@ def handle_event(event):
     for record in records:
         queries_json_record, file_key = get_query_results(record.get("s3"))
         missing_export_count, export_count = get_counts(queries_json_record)
-        message_payload = generate_message_payload(missing_export_count, export_count, file_key)
+        message_payload = generate_message_payload(
+            missing_export_count, export_count, file_key
+        )
         send_sns_message(message_payload, args.sns_topic)
 
 
@@ -198,7 +200,7 @@ def generate_message_payload(missing_exported_count, exported_count, file_key):
             {"key": "Missing exports count", "value": str(missing_exported_count)}
         )
         custom_elements.append(
-            {'key': 'S3-Location', 'value': f"s3://manifest-bucket/{file_key}"}
+            {"key": "S3-Location", "value": f"s3://manifest-bucket/{file_key}"}
         )
 
     payload = {

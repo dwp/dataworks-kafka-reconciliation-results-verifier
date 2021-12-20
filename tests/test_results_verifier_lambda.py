@@ -45,7 +45,10 @@ class TestResultsVerifier(TestCase):
                 "custom_elements": [
                     {"key": "Exported count", "value": "5"},
                     {"key": "Missing exports count", "value": "8"},
-                    {"key": "S3-Location", "value": f"s3://manifest-bucket/results/query_results.json"},
+                    {
+                        "key": "S3-Location",
+                        "value": f"s3://manifest-bucket/results/query_results.json",
+                    },
                 ],
             }
             print("£££££££££")
@@ -105,7 +108,9 @@ class TestResultsVerifier(TestCase):
         self.assertEqual(export_count, 0)
 
     def test_generate_message_payload_missing_exports(self):
-        result = event_handler.generate_message_payload(5, 100, "results/query_results.json")
+        result = event_handler.generate_message_payload(
+            5, 100, "results/query_results.json"
+        )
         expected_result = {
             "severity": "Critical",
             "notification_type": "Error",
@@ -114,7 +119,10 @@ class TestResultsVerifier(TestCase):
             "custom_elements": [
                 {"key": "Exported count", "value": "100"},
                 {"key": "Missing exports count", "value": "5"},
-                {"key": "S3-Location", "value": f"s3://manifest-bucket/results/query_results.json"},
+                {
+                    "key": "S3-Location",
+                    "value": f"s3://manifest-bucket/results/query_results.json",
+                },
             ],
         }
         print("£££££££££")
@@ -123,7 +131,9 @@ class TestResultsVerifier(TestCase):
         self.assertEqual(result, expected_result)
 
     def test_generate_message_payload_no_missing_exports(self):
-        result = event_handler.generate_message_payload(0, 50, "results/query_results.json")
+        result = event_handler.generate_message_payload(
+            0, 50, "results/query_results.json"
+        )
         expected_result = {
             "severity": "High",
             "notification_type": "Information",
