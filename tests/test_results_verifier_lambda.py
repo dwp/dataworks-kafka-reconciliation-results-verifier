@@ -125,9 +125,7 @@ class TestResultsVerifier(TestCase):
                 },
             ],
         }
-        print("£££££££££")
-        print(result)
-        print(expected_result)
+
         self.assertEqual(result, expected_result)
 
     def test_generate_message_payload_no_missing_exports(self):
